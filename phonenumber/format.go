@@ -12,11 +12,38 @@ func (n Number) Pretty() string {
 	b.WriteString(n.Exchange)
 	b.WriteString("-")
 	b.WriteString(n.Line)
+	n.writeExtension(&b)
+	return b.String()
+}
+
+// Dotted renders the number as "212.555.0134", the layout common in
+// signature blocks and some CSV exports.
+func (n Number) Dotted() string {
+	return n.joined(".")
+}
+
+// Spaced renders the number as "212 555 0134", the layout common in
+// international-style listings that omit NANP's usual punctuation.
+func (n Number) Spaced() string {
+	return n.joined(" ")
+}
+
+func (n Number) joined(sep string) string {
+	var b strings.Builder
+	b.WriteString(n.AreaCode)
+	b.WriteString(sep)
+	b.WriteString(n.Exchange)
+	b.WriteString(sep)
+	b.WriteString(n.Line)
+	n.writeExtension(&b)
+	return b.String()
+}
+
+func (n Number) writeExtension(b *strings.Builder) {
 	if n.Extension != "" {
 		b.WriteString(" ext. ")
 		b.WriteString(n.Extension)
 	}
-	return b.String()
 }
 
 // E164 renders the number per ITU-T E.164: "+1" followed by 10 digits.

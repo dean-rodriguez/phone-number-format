@@ -18,8 +18,11 @@ pick.
 $ go run . "(212) 555-0134"
 (212) 555-0134
 
-$ go run . --e164 "(212) 555-0134"
+$ go run . --format e164 "(212) 555-0134"
 +12125550134
+
+$ go run . --format dot "(212) 555-0134"
+212.555.0134
 
 $ go run . "212.555.0134"
 phonenumber: cannot parse "212.555.0134": does not match a recognized strict format (try +1XXXXXXXXXX, +1-XXX-XXX-XXXX, (XXX) XXX-XXXX, or XXX-XXX-XXXX)
@@ -66,14 +69,20 @@ because there's no correct default to assume.
 Both modes still enforce the core NANP structural rule: area codes and
 exchanges can't start with 0 or 1.
 
+## Output styles
+
+`--format` picks the output layout: `standard` (default, `(212) 555-0134`),
+`dot` (`212.555.0134`), `space` (`212 555 0134`), or `e164` (`+12125550134`).
+An unrecognized value is a usage error, not a silent fallback to standard.
+
 ## Layout
 
 - `phonenumber/parse.go` -- `Parse(raw string, lenient bool) (Number, error)`
-- `phonenumber/format.go` -- `Number.Pretty()` and `Number.E164()`
+- `phonenumber/format.go` -- `Number.Pretty()`, `Number.Dotted()`,
+  `Number.Spaced()`, and `Number.E164()`
 - `main.go` -- CLI wrapper
 
 ## Status
 
-Early. NANP only -- no support yet for other countries' numbering plans,
-and no CLI flag to choose an output layout beyond `--e164`. See the roadmap
-in commit history for what's planned next.
+Early. NANP only -- no support yet for other countries' numbering plans.
+See the roadmap in commit history for what's planned next.

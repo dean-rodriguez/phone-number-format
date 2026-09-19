@@ -9,10 +9,24 @@ import (
 	"github.com/dean-rodriguez/phone-number-format/phonenumber"
 )
 
+// renderers maps a --format value to the Number method that produces it.
+var renderers = map[string]func(phonenumber.Number) string{
+	"standard": phonenumber.Number.Pretty,
+	"dot":      phonenumber.Number.Dotted,
+	"space":    phonenumber.Number.Spaced,
+	"e164":     phonenumber.Number.E164,
+}
+
 func main() {
 	lenient := flag.Bool("lenient", false, "accept loosely formatted input instead of only canonical NANP layouts")
-	e164 := flag.Bool("e164", false, "print output as +1XXXXXXXXXX instead of (XXX) XXX-XXXX")
+	format := flag.String("format", "standard", "output style: standard, dot, space, or e164")
 	flag.Parse()
+
+	render, ok := renderers[*format]
+	if !ok {
+		fmt.Fprintf(os.Stderr, "phonenumber: unknown --format %q (want standard, dot, space, or e164)\n", *format)
+		os.Exit(1)
+	}
 
 	exitCode := 0
 	handle := func(raw string) {
@@ -22,11 +36,7 @@ func main() {
 			exitCode = 1
 			return
 		}
-		if *e164 {
-			fmt.Println(n.E164())
-		} else {
-			fmt.Println(n.Pretty())
-		}
+		fmt.Println(render(n))
 	}
 
 	if args := flag.Args(); len(args) > 0 {

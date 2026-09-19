@@ -28,6 +28,58 @@ func TestPretty(t *testing.T) {
 	}
 }
 
+func TestDotted(t *testing.T) {
+	cases := []struct {
+		name string
+		n    Number
+		want string
+	}{
+		{
+			"no extension",
+			Number{AreaCode: "212", Exchange: "555", Line: "0134"},
+			"212.555.0134",
+		},
+		{
+			"with extension",
+			Number{AreaCode: "212", Exchange: "555", Line: "0134", Extension: "45"},
+			"212.555.0134 ext. 45",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := c.n.Dotted(); got != c.want {
+				t.Fatalf("Dotted() = %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
+func TestSpaced(t *testing.T) {
+	cases := []struct {
+		name string
+		n    Number
+		want string
+	}{
+		{
+			"no extension",
+			Number{AreaCode: "212", Exchange: "555", Line: "0134"},
+			"212 555 0134",
+		},
+		{
+			"with extension",
+			Number{AreaCode: "212", Exchange: "555", Line: "0134", Extension: "45"},
+			"212 555 0134 ext. 45",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := c.n.Spaced(); got != c.want {
+				t.Fatalf("Spaced() = %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
 func TestE164(t *testing.T) {
 	cases := []struct {
 		name string
