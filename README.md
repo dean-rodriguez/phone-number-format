@@ -29,6 +29,9 @@ phonenumber: cannot parse "212.555.0134": does not match a recognized strict for
 
 $ go run . --lenient "212.555.0134 ext 42"
 (212) 555-0134 ext. 42
+
+$ go run . --lenient "1-800-CALL-NOW"
+(800) 225-5669
 ```
 
 It also reads from stdin, one number per line, when no arguments are given:
@@ -59,7 +62,9 @@ went genuinely wrong upstream, not "someone used dots instead of dashes."
 
 Pass `--lenient` to relax that: punctuation and whitespace are stripped down
 to digits, a leading country code digit `1` is accepted and dropped, and an
-`ext` / `x` / `#` suffix is recognized as an extension. Lenient mode also
+`ext` / `x` / `#` suffix is recognized as an extension. Letters are converted
+to their telephone keypad digit first, so vanity numbers work too --
+`1-800-CALL-NOW` parses the same as `1-800-225-5669`. Lenient mode also
 skips the reserved-N11-code check (211, 411, 611, ...) since it's a common
 source of false positives on real-world data and rejecting a number outright
 over it isn't worth the friction. What lenient mode does *not* do is guess at

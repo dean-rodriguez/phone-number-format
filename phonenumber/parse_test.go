@@ -78,6 +78,8 @@ func TestParseLenientAccepts(t *testing.T) {
 		{"extension via x", "212-555-0134x123", Number{AreaCode: "212", Exchange: "555", Line: "0134", Extension: "123"}},
 		{"extension via ext.", "212-555-0134 ext. 45", Number{AreaCode: "212", Exchange: "555", Line: "0134", Extension: "45"}},
 		{"extension via hash", "212-555-0134 #7", Number{AreaCode: "212", Exchange: "555", Line: "0134", Extension: "7"}},
+		{"vanity number", "1-800-CALL-NOW", Number{AreaCode: "800", Exchange: "225", Line: "5669"}},
+		{"vanity number lowercase", "1-800-flowers", Number{AreaCode: "800", Exchange: "356", Line: "9377"}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

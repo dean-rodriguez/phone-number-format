@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 // Number is a parsed NANP number, split into its NXX-NXX-XXXX components.
@@ -86,7 +87,7 @@ func parseLenient(s string) (Number, error) {
 		extension = m[2]
 	}
 
-	digits := stripNonDigits(body)
+	digits := stripNonDigits(vanityToDigits(body))
 	switch {
 	case len(digits) == 11 && strings.HasPrefix(digits, "1"):
 		digits = digits[1:]
@@ -109,6 +110,35 @@ func parseLenient(s string) (Number, error) {
 		return Number{}, &ParseError{Input: s, Reason: err.Error()}
 	}
 	return n, nil
+}
+
+// vanityLetters maps each letter to the digit it occupies on a standard
+// telephone keypad, e.g. 1-800-FLOWERS dials the same as 1-800-3569377.
+var vanityLetters = map[rune]byte{
+	'A': '2', 'B': '2', 'C': '2',
+	'D': '3', 'E': '3', 'F': '3',
+	'G': '4', 'H': '4', 'I': '4',
+	'J': '5', 'K': '5', 'L': '5',
+	'M': '6', 'N': '6', 'O': '6',
+	'P': '7', 'Q': '7', 'R': '7', 'S': '7',
+	'T': '8', 'U': '8', 'V': '8',
+	'W': '9', 'X': '9', 'Y': '9', 'Z': '9',
+}
+
+// vanityToDigits replaces letters with the digit they map to on a phone
+// keypad, leaving digits and punctuation untouched. It's applied before
+// stripNonDigits so a number like "1-800-CALL-NOW" parses the same way
+// its digit equivalent would.
+func vanityToDigits(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		if d, ok := vanityLetters[unicode.ToUpper(r)]; ok {
+			b.WriteByte(d)
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 func stripNonDigits(s string) string {
