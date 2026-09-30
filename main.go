@@ -20,6 +20,7 @@ var renderers = map[string]func(phonenumber.Number) string{
 func main() {
 	lenient := flag.Bool("lenient", false, "accept loosely formatted input instead of only canonical NANP layouts")
 	format := flag.String("format", "standard", "output style: standard, dot, space, or e164")
+	defaultArea := flag.String("default-area", "", "area code to assume for 7-digit local numbers (implies --lenient)")
 	flag.Parse()
 
 	render, ok := renderers[*format]
@@ -30,7 +31,13 @@ func main() {
 
 	exitCode := 0
 	handle := func(raw string) {
-		n, err := phonenumber.Parse(raw, *lenient)
+		var n phonenumber.Number
+		var err error
+		if *defaultArea != "" {
+			n, err = phonenumber.ParseWithDefaultArea(raw, *defaultArea)
+		} else {
+			n, err = phonenumber.Parse(raw, *lenient)
+		}
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			exitCode = 1

@@ -56,9 +56,40 @@ func Parse(raw string, lenient bool) (Number, error) {
 		return Number{}, ErrEmpty
 	}
 	if lenient {
-		return parseLenient(trimmed)
+		return parseLenient(trimmed, "")
 	}
 	return parseStrict(trimmed)
+}
+
+// ParseWithDefaultArea is Parse in lenient mode, except that a bare 7-digit
+// local number (NXX-XXXX) is completed with defaultArea instead of being
+// rejected. Strict mode has no equivalent on purpose: it exists to fail on
+// input that needs guessing. An empty defaultArea behaves exactly like
+// Parse(raw, true).
+func ParseWithDefaultArea(raw, defaultArea string) (Number, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return Number{}, ErrEmpty
+	}
+	if defaultArea != "" {
+		if err := checkDefaultArea(defaultArea); err != nil {
+			return Number{}, err
+		}
+	}
+	return parseLenient(trimmed, defaultArea)
+}
+
+// checkDefaultArea makes sure the fallback area code would itself be a legal
+// one, so a typo in configuration surfaces once instead of as a stream of
+// plausible-looking but wrong numbers.
+func checkDefaultArea(area string) error {
+	if len(area) != 3 || len(stripNonDigits(area)) != 3 {
+		return fmt.Errorf("phonenumber: default area code %q must be exactly 3 digits", area)
+	}
+	if err := validate(Number{AreaCode: area, Exchange: "200"}, true); err != nil {
+		return fmt.Errorf("phonenumber: invalid default area code: %w", err)
+	}
+	return nil
 }
 
 func parseStrict(s string) (Number, error) {
@@ -79,7 +110,7 @@ func parseStrict(s string) (Number, error) {
 	}
 }
 
-func parseLenient(s string) (Number, error) {
+func parseLenient(s, defaultArea string) (Number, error) {
 	body := s
 	extension := ""
 	if m := extensionPattern.FindStringSubmatch(s); m != nil {
@@ -93,6 +124,8 @@ func parseLenient(s string) (Number, error) {
 		digits = digits[1:]
 	case len(digits) == 10:
 		// already bare
+	case len(digits) == 7 && defaultArea != "":
+		digits = defaultArea + digits
 	default:
 		return Number{}, &ParseError{
 			Input:  s,

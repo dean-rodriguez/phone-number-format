@@ -69,7 +69,22 @@ skips the reserved-N11-code check (211, 411, 611, ...) since it's a common
 source of false positives on real-world data and rejecting a number outright
 over it isn't worth the friction. What lenient mode does *not* do is guess at
 missing digits -- a 7-digit local number with no area code still fails,
-because there's no correct default to assume.
+unless you say which area code to assume (next section).
+
+### Default area code
+
+`--default-area NPA` completes 7-digit local numbers with the given area
+code. It implies `--lenient`; strict mode never guesses.
+
+```
+$ go run . --default-area 415 "555-0134"
+(415) 555-0134
+```
+
+Numbers that already carry an area code are left alone. The default itself
+is checked up front (three digits, not starting with 0 or 1), so a typo is
+an error rather than a batch of wrong numbers. From Go, use
+`phonenumber.ParseWithDefaultArea(raw, area)`.
 
 Both modes still enforce the core NANP structural rule: area codes and
 exchanges can't start with 0 or 1.
@@ -83,6 +98,7 @@ An unrecognized value is a usage error, not a silent fallback to standard.
 ## Layout
 
 - `phonenumber/parse.go` -- `Parse(raw string, lenient bool) (Number, error)`
+  and `ParseWithDefaultArea(raw, area string) (Number, error)`
 - `phonenumber/format.go` -- `Number.Pretty()`, `Number.Dotted()`,
   `Number.Spaced()`, and `Number.E164()`
 - `main.go` -- CLI wrapper
